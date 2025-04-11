@@ -32,7 +32,7 @@ export function Navbar() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Button variant="default" size="sm">
+              <Button variant = "default" size="sm">
                 <UserPlus className="mr-2 h-4 w-4" />
                 Sign Up
               </Button>

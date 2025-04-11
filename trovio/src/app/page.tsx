@@ -86,7 +86,7 @@ export default function Home() {
             ))}
           </div>
           
-          <Button className="mt-8 bg-white text-black hover:bg-white/90" size="lg">
+          <Button className="mt-8 bg-white text-black hover:bg-white/90" size ="lg">
             Start Exploring
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
