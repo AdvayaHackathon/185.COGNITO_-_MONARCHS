@@ -1,90 +1,116 @@
-import { Button } from "@/components/ui/button";
-import { CategoryCard } from "@/components/category-card";
-import { RecommendationCard } from "@/components/recommendation-card";
+import { Button } from "@/src/components/ui/button";
+import { CategoryPill } from "@/src/components/category-pill";
+import { InterestCard } from "@/src/components/interest-card";
+import { RecommendationCard } from "@/src/components/recommendation-card";
 import { ArrowRight } from "lucide-react";
 
 const categories = [
+  { title: "Heritage Sites", href: "/explore/heritage" },
+  { title: "Local Cuisine", href: "/explore/food" },
+  { title: "Cultural Events", href: "/explore/culture" },
+];
+
+const interests = [
+  {
+    title: "History",
+    icon: "🏛️",
+    image: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&q=80&w=800",
+    href: "/explore/history",
+  },
   {
     title: "Art",
-    image: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?auto=format&fit=crop&q=80&w=800",
+    icon: "🎨",
+    image: "https://images.unsplash.com/photo-1582560475093-ba66accbc424?auto=format&fit=crop&q=80&w=800",
     href: "/explore/art",
   },
   {
     title: "Food",
-    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
+    icon: "🍳",
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&q=80&w=800",
     href: "/explore/food",
   },
   {
-    title: "History",
-    image: "https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&q=80&w=800",
-    href: "/explore/history",
-  },
-  {
     title: "Nature",
-    image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=800",
+    icon: "🌿",
+    image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&q=80&w=800",
     href: "/explore/nature",
   },
 ];
 
 const recommendations = [
   {
-    title: "Hidden Beach of Marieta Islands",
-    description: "A secluded beach paradise accessible only by swimming through a tunnel",
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=800",
-    location: "Puerto Vallarta, Mexico",
-    href: "/destination/hidden-beach",
+    title: "Ancient Step Wells of Rajasthan",
+    description: "Discover the architectural marvel of Chand Baori, one of India's deepest and most fascinating step wells",
+    image: "https://images.unsplash.com/photo-1590766940722-a176a2fa920e?auto=format&fit=crop&q=80&w=800",
+    location: "Abhaneri, Rajasthan",
+    href: "/destination/chand-baori",
   },
   {
-    title: "Ancient Tea House",
-    description: "A 300-year-old traditional tea house nestled in the mountains",
-    image: "https://images.unsplash.com/photo-1577089907583-991f1225e433?auto=format&fit=crop&q=80&w=800",
-    location: "Kyoto, Japan",
-    href: "/destination/tea-house",
+    title: "Hidden Temples of Hampi",
+    description: "Explore the lesser-known temples and ruins in this UNESCO World Heritage site",
+    image: "https://images.unsplash.com/photo-1621622633934-b06286cacf6c?auto=format&fit=crop&q=80&w=800",
+    location: "Hampi, Karnataka",
+    href: "/destination/hampi-temples",
   },
   {
-    title: "Forgotten Castle",
-    description: "An overlooked medieval castle with stunning valley views",
-    image: "https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&q=80&w=800",
-    location: "Loire Valley, France",
-    href: "/destination/forgotten-castle",
+    title: "Secret Beaches of Gokarna",
+    description: "Find tranquility at the pristine and less-crowded beaches of this coastal town",
+    image: "https://images.unsplash.com/photo-1584771397412-0e4c8ee5e064?auto=format&fit=crop&q=80&w=800",
+    location: "Gokarna, Karnataka",
+    href: "/destination/gokarna-beaches",
   },
 ];
 
 export default function Home() {
   return (
-    <div className="flex flex-col gap-16 py-8 md:gap-24 md:py-12">
-      <section className="container">
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-            Discover Hidden Gems Around the World
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="relative h-[80vh] min-h-[600px] w-full">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1514222134-b57cbb8ff827?auto=format&fit=crop&q=80&w=1920"
+            alt="Ancient Indian Architecture"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+        
+        <div className="container relative flex h-full flex-col items-center justify-center text-center text-white">
+          <h1 className="max-w-4xl text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
+            Discover India's Best Kept Secrets
           </h1>
-          <p className="mt-4 max-w-[700px] text-muted-foreground md:text-xl">
-            Explore unique destinations off the beaten path. Find authentic experiences and create
-            unforgettable memories.
-          </p>
-          <Button className="mt-8" size="lg">
+          
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {categories.map((category) => (
+              <CategoryPill key={category.title} {...category} />
+            ))}
+          </div>
+          
+          <Button className="mt-8 bg-white text-black hover:bg-white/90" size="lg">
             Start Exploring
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </section>
 
-      <section className="container">
-        <h2 className="mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-          Explore by Interest
+      {/* Interests Section */}
+      <section className="container py-16 md:py-24">
+        <h2 className="mb-12 text-center text-3xl font-bold tracking-tight md:text-4xl">
+          What are your interests?
         </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {categories.map((category) => (
-            <CategoryCard key={category.title} {...category} />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {interests.map((interest) => (
+            <InterestCard key={interest.title} {...interest} />
           ))}
         </div>
       </section>
 
-      <section className="container">
-        <h2 className="mb-8 text-2xl font-bold tracking-tight md:text-3xl">
-          Recommended Hidden Gems
+      {/* Recommendations Section */}
+      <section className="container pb-16 md:pb-24">
+        <h2 className="mb-12 text-3xl font-bold tracking-tight md:text-4xl">
+          Recommendations for You
         </h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {recommendations.map((recommendation) => (
             <RecommendationCard key={recommendation.title} {...recommendation} />
           ))}
