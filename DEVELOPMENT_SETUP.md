@@ -59,19 +59,38 @@ npm run lint
 
 ```
 trovio/
-├── app/               # App Router routes and pages
-├── components/        # Reusable React components
-├── public/            # Static assets (images, fonts, etc.)
-├── styles/            # Global styles and Tailwind CSS config
-├── utils/             # Utility/helper functions
-├── lib/               # API clients and libraries
-├── types/             # TypeScript types and interfaces
-├── package.json       # Project dependencies and scripts
-├── next.config.js     # Next.js config
-├── tsconfig.json      # TypeScript config
-├── .eslintrc.json     # ESLint config
-├── postcss.config.js  # PostCSS config (used by Tailwind)
-├── tailwind.config.ts # Tailwind config
+├── public/
+├── src/
+│   ├── app/             // Frontend (React components, pages, layouts, API routes)
+│   │   ├── (api)/       // Dedicated directory for your backend API routes
+│   │   │   └── places/
+│   │   │       └── route.ts   // Example API route for places data
+│   │   ├── components/    // Reusable frontend components
+│   │   ├── layout.tsx
+│   │   ├── page.tsx       // Your main application page(s)
+│   │   ├── ... (other frontend routes and components)
+│   ├── lib/             // Utility functions, API clients, database connections, etc. (shared or backend-specific)
+│   │   ├── places.ts    // Frontend-specific Places API client (if needed)
+│   │   ├── api-utils.ts // Utility functions for your backend API routes
+│   │   ├── db.ts        // Database connection logic (if you have one)
+│   │   ├── auth.ts      // Authentication logic
+│   │   └── ... (other shared or backend utilities)
+│   ├── models/          // Data models/schemas (can be shared or backend-specific)
+│   │   └── place.ts
+│   ├── services/        // Backend business logic (can be an alternative to parts of 'lib')
+│   │   └── places.ts    // Backend logic for fetching/processing places data
+│   ├── utils/           // Generic utility functions (shared)
+│   │   └── helpers.ts
+│   ├── middleware.ts    // Middleware for handling requests
+│   ├── ... (other frontend-related files like global CSS, etc. at the src level)
+├── styles/            // Global CSS files (if not using Tailwind exclusively)
+├── eslint.config.mjs
+├── .gitignore
+├── next.config.js
+├── package.json
+├── README.md
+├── tsconfig.json
+└── ... (other configuration files)
 ```
 
 ## Workflow: Development on `develop` Branch
