@@ -7,7 +7,7 @@ Welcome to the Trovio team! This document outlines the basic steps to get your l
 Before you begin, ensure you have the following installed on your machine:
 
 * **Node.js:** (Ideally the latest LTS version. You can check your version with `node -v`). We recommend using a Node.js version manager like [nvm](https://github.com/nvm-sh/nvm) (for macOS/Linux) or [nvm-windows](https://github.com/coreybutler/nvm-windows) to easily switch between Node.js versions if needed.
-* **npm, yarn, or pnpm:** (Choose one package manager and stick with it for consistency within the project. Check your version with `npm -v`, `yarn --version`, or `pnpm --version`). This project will likely use [YOUR CHOSEN PACKAGE MANAGER - e.g., npm].
+* **npm:** (Check your version with `npm -v`).
 
 ## Initial Setup
 
