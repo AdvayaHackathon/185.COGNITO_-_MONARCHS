@@ -32,7 +32,7 @@ const HIDDEN_GEM_KEYWORDS = [
 
 const fallbackPlaces = [
     {
-        id: "1",
+        id: "loading",
         title: "Loading places...",
         description: "Discovering hidden gems near you",
         image: "/images/placeholder.jpg",
@@ -42,6 +42,7 @@ const fallbackPlaces = [
 export default function PlacesPage() {
     const [query, setQuery] = useState("");
     const [places, setPlaces] = useState(fallbackPlaces);
+    const [filteredPlaces, setFilteredPlaces] = useState(fallbackPlaces);
     const [isLoading, setIsLoading] = useState(false);
     const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral | null>(null);
     const mapRef = useRef<HTMLDivElement>(null);
@@ -51,7 +52,6 @@ export default function PlacesPage() {
         libraries,
     });
 
-    // Get user's location
     useEffect(() => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -68,7 +68,6 @@ export default function PlacesPage() {
         }
     }, []);
 
-    // Fetch nearby hidden gems
     useEffect(() => {
         if (!isLoaded || !userLocation) return;
 
@@ -82,9 +81,9 @@ export default function PlacesPage() {
                 return new Promise<google.maps.places.PlaceResult[]>((resolve) => {
                     const request: google.maps.places.PlaceSearchRequest = {
                         location: userLocation,
-                        radius: 8000, // Increased from 3000 to 8000 meters
+                        radius: 8000,
                         type: type,
-                        keyword: HIDDEN_GEM_KEYWORDS,
+                        keyword: query || HIDDEN_GEM_KEYWORDS, // Use search query if present
                         openNow: true
                     };
 
@@ -133,6 +132,7 @@ export default function PlacesPage() {
                     }));
 
                 setPlaces(hiddenGems);
+                setFilteredPlaces(hiddenGems);
             } catch (error) {
                 console.error('Error fetching places:', error);
             } finally {
@@ -141,7 +141,15 @@ export default function PlacesPage() {
         };
 
         getNearbyPlaces();
-    }, [isLoaded, userLocation]);
+    }, [isLoaded, userLocation, query]); // Added query to dependencies
+
+    useEffect(() => {
+        const filtered = places.filter((place) =>
+            place.title.toLowerCase().includes(query.toLowerCase()) ||
+            place.description.toLowerCase().includes(query.toLowerCase())
+        );
+        setFilteredPlaces(filtered);
+    }, [query, places]);
 
     return (
         <main className="min-h-screen bg-background py-16">
@@ -163,9 +171,10 @@ export default function PlacesPage() {
                 <div ref={mapRef} style={{ display: "none" }} />
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {places.map((place) => (
+                    {filteredPlaces.map((place) => (
                         <PlaceCard
                             key={place.id}
+                            id={place.id}
                             image={place.image}
                             title={place.title}
                             description={place.description}
