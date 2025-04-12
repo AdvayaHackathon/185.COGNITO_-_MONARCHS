@@ -1,57 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useRef } from "react";
 import Map from "@/components/Map";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import RecommendationsSection from "@/components/RecommendationSection";
-import { loadGoogleMapsApi } from "@/utils/maps-loader";
+import { useMapsApi } from "@/context/MapsContext";
+import Image from "next/image";
 
 export default function Home() {
     const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-    const [location, setLocation] = useState<google.maps.LatLngLiteral | null>(null);
-    const [apiLoaded, setApiLoaded] = useState(false);
-
-    useEffect(() => {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!;
-        loadGoogleMapsApi(apiKey).then(() => {
-            setApiLoaded(true);
-        });
-    }, []);
-
-    useEffect(() => {
-        if (apiLoaded && navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setLocation({
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                    });
-                },
-                () => {
-                    setLocation({ lat: 28.6139, lng: 77.209 }); // fallback: New Delhi
-                }
-            );
-        }
-    }, [apiLoaded]);
+    const { isLoaded, location } = useMapsApi();
+    const recommendationsRef = useRef<HTMLElement>(null);
 
     const handleInterestClick = (interest: string) => {
+        const isNewSelection = !selectedInterests.includes(interest);
+
         setSelectedInterests((prev) =>
             prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
         );
+
+        // Scroll to recommendations section when adding a new interest
+        if (isNewSelection && location && isLoaded && recommendationsRef.current) {
+            recommendationsRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
     };
 
     return (
         <main>
             {/* Hero Section */}
-            <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/0 py-32">
+            <section className="relative py-32">
+                {/* Full background image */}
+                <div className="absolute inset-0 -z-10">
+                    <Image
+                        src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070"
+                        alt="City background"
+                        fill
+                        className="object-cover brightness-50"
+                        priority
+                    />
+                </div>
                 <div className="container">
-                    <h1 className="mb-6 text-5xl font-bold">Discover Your Next Adventure</h1>
-                    <p className="mb-8 text-lg text-muted-foreground">
+                    <h1 className="mb-6 text-5xl font-bold text-white">Discover Your Next Adventure</h1>
+                    <p className="mb-8 text-lg text-gray-200">
                         Find unique places, plan your journey, and create unforgettable memories.
                     </p>
-                    <Link href="/places">
+                    <Link href="/places" className="inline-block">
                         <Button size="lg">Start Exploring</Button>
                     </Link>
                 </div>
@@ -62,6 +57,7 @@ export default function Home() {
                 <div className="container">
                     <h2 className="mb-8 text-3xl font-bold">What are your interests?</h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {/* Interest cards remain the same */}
                         {[
                             { name: "Nature", types: ["Parks", "Natural Features", "Campgrounds"] },
                             { name: "Culture", types: ["Museums", "Art Galleries"] },
@@ -72,15 +68,15 @@ export default function Home() {
                         ].map((interest) => (
                             <Card
                                 key={interest.name}
-                                className={`cursor-pointer p-6 hover:bg-accent/50 ${
+                                className={`cursor-pointer border-2 p-6 ${
                                     selectedInterests.includes(interest.name)
-                                        ? "border-2 border-accent bg-accent-foreground text-background"
-                                        : ""
+                                        ? "border-accent bg-accent-foreground text-background hover:bg-accent-foreground/90"
+                                        : "border-transparent hover:bg-accent/50"
                                 }`}
                                 onClick={() => handleInterestClick(interest.name)}
                             >
                                 <h3 className="mb-2 text-xl font-semibold">{interest.name}</h3>
-                                <p className="text-sm text-muted-foreground">
+                                <p className={`text-sm ${selectedInterests.includes(interest.name) ? "text-background/80" : "text-muted-foreground"}`}>
                                     {interest.types.join(", ")}
                                 </p>
                             </Card>
@@ -90,21 +86,23 @@ export default function Home() {
             </section>
 
             {/* Map */}
-            {location && apiLoaded && (
+            {location && isLoaded && (
                 <section className="py-8">
                     <div className="container">
-                        <Map mapsApiLoaded={apiLoaded} center={location} />
+                        <Map mapsApiLoaded={isLoaded} center={location} />
                     </div>
                 </section>
             )}
 
-            {/* Dynamic Recommendations */}
-            {location && apiLoaded && (
-                <RecommendationsSection
-                    selectedInterests={selectedInterests}
-                    location={location}
-                    mapsApiLoaded={apiLoaded}
-                />
+            {/* Dynamic Recommendations with ref for scrolling */}
+            {location && isLoaded && (
+                <section ref={recommendationsRef} id="recommendations" className="py-8">
+                    <RecommendationsSection
+                        selectedInterests={selectedInterests}
+                        location={location}
+                        mapsApiLoaded={isLoaded}
+                    />
+                </section>
             )}
         </main>
     );
