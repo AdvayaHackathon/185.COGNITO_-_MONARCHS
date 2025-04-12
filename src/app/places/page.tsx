@@ -8,48 +8,42 @@ import type { Libraries } from "@react-google-maps/api";
 
 const libraries: Libraries = ["places"];
 
-const samplePlaces = [
+const HIDDEN_GEM_TYPES = [
+    "restaurant",
+    "cafe",
+    "bar",
+    "art_gallery",
+    "museum",
+    "park",
+    "book_store",
+    "bakery"
+] as const;
+
+const HIDDEN_GEM_KEYWORDS = [
+    "local favorite",
+    "hidden gem",
+    "unique",
+    "authentic",
+    "independent",
+    "family owned",
+    "neighborhood",
+    "off the beaten path"
+].join(" OR ");
+
+const fallbackPlaces = [
     {
         id: "1",
-        title: "Hidden Alley Cafe",
-        description: "Cozy cafe tucked away in an artistic neighborhood.",
-        image: "/images/cafe.jpg",
-    },
-    {
-        id: "2",
-        title: "Secret Graffiti Spot",
-        description: "A vibrant wall of street art in an off‑the‑beaten‑path locale.",
-        image: "/images/graffiti.jpg",
-    },
-    {
-        id: "3",
-        title: "Local Artisan Workshop",
-        description: "Discover unique handcrafted items and meet local artisans.",
-        image: "/images/artisan.jpg",
+        title: "Loading places...",
+        description: "Discovering hidden gems near you",
+        image: "/images/placeholder.jpg",
     },
 ];
 
-function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
-}
-
 export default function PlacesPage() {
     const [query, setQuery] = useState("");
-    const [places, setPlaces] = useState(samplePlaces);
+    const [places, setPlaces] = useState(fallbackPlaces);
     const [isLoading, setIsLoading] = useState(false);
-    const debouncedQuery = useDebounce(query, 500);
+    const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral | null>(null);
     const mapRef = useRef<HTMLDivElement>(null);
 
     const { isLoaded } = useLoadScript({
@@ -57,55 +51,97 @@ export default function PlacesPage() {
         libraries,
     });
 
+    // Get user's location
     useEffect(() => {
-        if (!isLoaded || !debouncedQuery.trim()) {
-            setPlaces(samplePlaces);
-            return;
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    });
+                },
+                (error) => {
+                    console.error("Error getting location:", error);
+                }
+            );
         }
+    }, []);
 
-        const searchPlaces = () => {
+    // Fetch nearby hidden gems
+    useEffect(() => {
+        if (!isLoaded || !userLocation) return;
+
+        const getNearbyPlaces = async () => {
             setIsLoading(true);
 
             const mapDiv = mapRef.current || document.createElement("div");
             const service = new google.maps.places.PlacesService(mapDiv);
 
-            const request: google.maps.places.TextSearchRequest = {
-                query: debouncedQuery,
-            };
+            const searchPromises = HIDDEN_GEM_TYPES.map(type => {
+                return new Promise<google.maps.places.PlaceResult[]>((resolve) => {
+                    const request: google.maps.places.PlaceSearchRequest = {
+                        location: userLocation,
+                        radius: 8000, // Increased from 3000 to 8000 meters
+                        type: type,
+                        keyword: HIDDEN_GEM_KEYWORDS,
+                        openNow: true
+                    };
 
-            service.textSearch(
-                request,
-                (
-                    results: google.maps.places.PlaceResult[] | null,
-                    status: google.maps.places.PlacesServiceStatus
-                ) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-                        const formattedPlaces = results.map((place) => ({
-                            id: place.place_id || String(Math.random()),
-                            title: place.name || "Unnamed Place",
-                            description: place.formatted_address || "No address available",
-                            image: place.photos?.[0]?.getUrl({
-                                maxWidth: 400,
-                                maxHeight: 300
-                            }) || "/images/placeholder.jpg",
-                        }));
-                        setPlaces(formattedPlaces);
-                    } else {
-                        console.error("Places API Error:", status);
-                        const filteredPlaces = samplePlaces.filter(
-                            (place) =>
-                                place.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-                                place.description.toLowerCase().includes(debouncedQuery.toLowerCase())
-                        );
-                        setPlaces(filteredPlaces);
-                    }
-                    setIsLoading(false);
-                }
-            );
+                    service.nearbySearch(request, (results, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+                            resolve(results);
+                        } else {
+                            resolve([]);
+                        }
+                    });
+                });
+            });
+
+            try {
+                const allResults = await Promise.all(searchPromises);
+                const combinedResults = allResults.flat();
+
+                const hiddenGems = combinedResults
+                    .filter(place =>
+                        place.rating &&
+                        place.rating >= 4.0 &&
+                        place.user_ratings_total &&
+                        place.user_ratings_total < 500 &&
+                        place.price_level &&
+                        place.price_level <= 3
+                    )
+                    .sort((a, b) => {
+                        const scoreA = (a.rating || 0) * Math.log1p(a.user_ratings_total || 1);
+                        const scoreB = (b.rating || 0) * Math.log1p(b.user_ratings_total || 1);
+                        return scoreB - scoreA;
+                    })
+                    .filter((place, index, self) =>
+                        index === self.findIndex(p => p.place_id === place.place_id)
+                    )
+                    .slice(0, 6)
+                    .map((place) => ({
+                        id: place.place_id || String(Math.random()),
+                        title: place.name || "Unnamed Place",
+                        description: `${place.rating}★ (${place.user_ratings_total} reviews) · ${
+                            Array(place.price_level).fill('$').join('')
+                        } · ${place.vicinity || "No address available"}`,
+                        image: place.photos?.[0]?.getUrl({
+                            maxWidth: 400,
+                            maxHeight: 300
+                        }) || "/images/placeholder.jpg",
+                    }));
+
+                setPlaces(hiddenGems);
+            } catch (error) {
+                console.error('Error fetching places:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
-        searchPlaces();
-    }, [debouncedQuery, isLoaded]);
+        getNearbyPlaces();
+    }, [isLoaded, userLocation]);
 
     return (
         <main className="min-h-screen bg-background py-16">
@@ -135,11 +171,6 @@ export default function PlacesPage() {
                             description={place.description}
                         />
                     ))}
-                    {places.length === 0 && !isLoading && (
-                        <div className="col-span-full text-center text-gray-400 py-8">
-                            No places found matching your search.
-                        </div>
-                    )}
                 </div>
             </div>
         </main>
